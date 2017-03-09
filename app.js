@@ -21,10 +21,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(require('node-sass-middleware')({
-  src: path.join(__dirname, 'public'),
-  dest: path.join(__dirname, 'public'),
-  indentedSyntax: true,
-  sourceMap: true
+    src: path.join(__dirname, 'public'),
+    dest: path.join(__dirname, 'public'),
+    indentedSyntax: true,
+    sourceMap: true
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -33,9 +33,9 @@ app.use('/users', users);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
 });
 
 // error handlers
@@ -43,42 +43,43 @@ app.use(function(req, res, next) {
 // development error handler
 // will print stacktrace
 if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-      message: err.message,
-      error: err
+    app.use(function(err, req, res, next) {
+        res.status(err.status || 500);
+        res.render('error', {
+            message: err.message,
+            error: err
+        });
     });
-  });
 }
 
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
+    res.status(err.status || 500);
+    res.render('error', {
+        message: err.message,
+        error: {}
+    });
 });
 
-var WebSocketServer = require('ws').Server, wss = new WebSocketServer({port: 8080});
+var WebSocketServer = require('ws').Server,
+    wss = new WebSocketServer({ port: 8080 });
 
 console.log('Websocket server started on 8080');
 
-var rabbit = {x:0, y:0};
+var rabbit = { x: 0, y: 0 };
 
 wss.on('connection', function(ws) {
-  ws.on('message', function(message) {
-    var incommingMsg = JSON.parse(message);
-    rabbit.x = incommingMsg.x;
-    rabbit.y = incommingMsg.y;
-    for(var i in wss.clients) {
-      wss.clients[i].send(JSON.stringify(rabbit));
-    }
+    ws.on('message', function(message) {
+        var incommingMsg = JSON.parse(message);
+        rabbit.x = incommingMsg.x;
+        rabbit.y = incommingMsg.y;
+        for (var i in wss.clients) {
+            wss.clients[i].send(JSON.stringify(rabbit));
+        }
 
-  });
-  ws.send(JSON.stringify(rabbit));
+    });
+    ws.send(JSON.stringify(rabbit));
 });
 
 /*
@@ -88,3 +89,17 @@ app.listen(3000, function () {
 */
 
 module.exports = app;
+
+var players = {};
+
+wss.on('connection', function(ws) {
+    ws.on('message', function(message) {
+        var incommingMsg = JSON.parse(message);
+        players[incommingMsg.uuid] = { x: incommingMsg.x, y: incommingMsg.y };
+        for (var i in wss.clients) {
+            wss.clients[i].send(JSON.stringify(players));
+        }
+
+    });
+    ws.send(JSON.stringify(players));
+});
